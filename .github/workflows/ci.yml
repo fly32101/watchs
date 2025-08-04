@@ -22,43 +22,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
-          cache: true
-
-      - name: Debug directory structure (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: find . -type d | sort
-
-      - name: Debug directory structure (Windows)
-        if: runner.os == 'Windows'
-        run: Get-ChildItem -Recurse -Directory | Select-Object FullName | Sort-Object FullName
-
-      - name: Get dependencies
-        run: go mod download
-
-      - name: Run tests
-        run: go test -v ./...
-
-  build:
-    name: Build
-    needs: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            output_name: watchs-linux-amd64
-          - os: windows-latest
-            output_name: watchs-windows-amd64.exe
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          cache: true
 
       - name: Debug directory structure (Linux/macOS)
         if: runner.os != 'Windows'
@@ -88,89 +51,6 @@ jobs:
           echo "All main.go files:"
           Get-ChildItem -Path . -Filter "main.go" -Recurse | Select-Object FullName | Sort-Object FullName
 
-      - name: Create main.go (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          # 创建cmd/watchs目录
-          mkdir -p cmd/watchs
-          
-          # 创建main.go文件
-          cat > cmd/watchs/main.go << 'EOF'
-package main
-
-import (
-	"log"
-
-	"github.com/watchs/presentation/cli"
-)
-
-// 版本信息，将由GoReleaser在构建时注入
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
-
-func main() {
-	// 设置日志格式
-	log.SetFlags(log.Ldate | log.Ltime)
-
-	// 设置版本信息
-	cli.Version = version
-	cli.Commit = commit
-	cli.Date = date
-
-	// 创建并运行CLI
-	cli := cli.NewCLI()
-	cli.Run()
-}
-EOF
-          
-          echo "Content of created main.go:"
-          cat cmd/watchs/main.go
-
-      - name: Create main.go (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # 创建cmd/watchs目录
-          New-Item -Path "cmd/watchs" -ItemType Directory -Force
-          
-          # 创建main.go文件
-          $content = @'
-package main
-
-import (
-	"log"
-
-	"github.com/watchs/presentation/cli"
-)
-
-// 版本信息，将由GoReleaser在构建时注入
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
-
-func main() {
-	// 设置日志格式
-	log.SetFlags(log.Ldate | log.Ltime)
-
-	// 设置版本信息
-	cli.Version = version
-	cli.Commit = commit
-	cli.Date = date
-
-	// 创建并运行CLI
-	cli := cli.NewCLI()
-	cli.Run()
-}
-'@
-          Set-Content -Path "cmd/watchs/main.go" -Value $content
-          
-          echo "Content of created main.go:"
-          Get-Content -Path "cmd/watchs/main.go"
-
       - name: Get dependencies
         run: go mod download
 
@@ -187,4 +67,4 @@ func main() {
         with:
           name: ${{ matrix.output_name }}
           path: ${{ matrix.output_name }}
-          retention-days: 5 
+          retention-days: 5

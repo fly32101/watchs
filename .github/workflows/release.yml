@@ -37,46 +37,6 @@ jobs:
           echo "All main.go files:"
           find . -name "main.go" | sort
 
-      - name: Create main.go
-        run: |
-          # 创建cmd/watchs目录
-          mkdir -p cmd/watchs
-          
-          # 创建main.go文件
-          cat > cmd/watchs/main.go << 'EOF'
-package main
-
-import (
-	"log"
-
-	"github.com/watchs/presentation/cli"
-)
-
-// 版本信息，将由GoReleaser在构建时注入
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
-
-func main() {
-	// 设置日志格式
-	log.SetFlags(log.Ldate | log.Ltime)
-
-	// 设置版本信息
-	cli.Version = version
-	cli.Commit = commit
-	cli.Date = date
-
-	// 创建并运行CLI
-	cli := cli.NewCLI()
-	cli.Run()
-}
-EOF
-          
-          echo "Content of created main.go:"
-          cat cmd/watchs/main.go
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
@@ -84,4 +44,4 @@ EOF
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
