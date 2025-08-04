@@ -24,8 +24,13 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
 
-      - name: List directory structure
+      - name: List directory structure (Linux/macOS)
+        if: runner.os != 'Windows'
         run: find . -type d | sort
+
+      - name: List directory structure (Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem -Recurse -Directory | Select-Object FullName | Sort-Object FullName
 
       - name: Get dependencies
         run: go mod download
@@ -55,7 +60,8 @@ jobs:
           go-version: '1.21'
           cache: true
 
-      - name: List directory structure
+      - name: List directory structure (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           echo "Current directory:"
           pwd
@@ -63,11 +69,26 @@ jobs:
           ls -la
           echo "cmd directory contents:"
           ls -la cmd || echo "cmd directory not found"
+          echo "Finding main.go files:"
+          find . -name "main.go"
+
+      - name: List directory structure (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "Current directory:"
+          Get-Location
+          echo "Directory contents:"
+          Get-ChildItem -Force
+          echo "cmd directory contents:"
+          Get-ChildItem -Path cmd -Force -ErrorAction SilentlyContinue || echo "cmd directory not found"
+          echo "Finding main.go files:"
+          Get-ChildItem -Path . -Filter "main.go" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
 
       - name: Get dependencies
         run: go mod download
 
-      - name: Build
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           # 检查cmd/watchs目录是否存在
           if [ -d "cmd/watchs" ]; then
@@ -78,6 +99,19 @@ jobs:
             find . -name "main.go"
             exit 1
           fi
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # 检查cmd/watchs目录是否存在
+          if (Test-Path -Path "cmd/watchs") {
+            go build -v -o ${{ matrix.output_name }} ./cmd/watchs
+          } else {
+            echo "Error: cmd/watchs directory not found"
+            # 尝试查找main.go文件
+            Get-ChildItem -Path . -Filter "main.go" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+            exit 1
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

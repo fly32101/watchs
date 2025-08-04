@@ -33,7 +33,53 @@ jobs:
           echo "cmd directory contents:"
           ls -la cmd || echo "cmd directory not found"
           echo "Finding main.go files:"
-          find . -name "main.go"
+          find . -name "main.go" || echo "No main.go files found"
+          echo "Repository structure:"
+          find . -type d | sort || echo "Failed to list directories"
+
+      - name: Create main.go if missing
+        run: |
+          if [ ! -d "cmd/watchs" ]; then
+            echo "Creating cmd/watchs directory..."
+            mkdir -p cmd/watchs
+          fi
+          
+          if [ ! -f "cmd/watchs/main.go" ]; then
+            echo "Creating main.go file..."
+            cat > cmd/watchs/main.go << 'EOF'
+package main
+
+import (
+	"log"
+
+	"github.com/watchs/presentation/cli"
+)
+
+// 版本信息，将由GoReleaser在构建时注入
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func main() {
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	// 设置版本信息
+	cli.Version = version
+	cli.Commit = commit
+	cli.Date = date
+
+	// 创建并运行CLI
+	cli := cli.NewCLI()
+	cli.Run()
+}
+EOF
+          fi
+          
+          echo "Content of main.go:"
+          cat cmd/watchs/main.go
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
