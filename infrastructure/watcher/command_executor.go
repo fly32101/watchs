@@ -2,11 +2,12 @@ package watcher
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/watchs/presentation/cli/ui"
 )
 
 // CommandExecutorImpl 是命令执行器的实现
@@ -43,7 +44,7 @@ func (e *CommandExecutorImpl) Execute(command string, workDir string) error {
 	// 先终止之前的命令
 	e.terminateUnsafe()
 
-	log.Printf("执行命令: %s", command)
+	ui.PrintInfo(fmt.Sprintf("执行命令: %s", command))
 
 	// 根据操作系统选择不同的命令执行方式
 	var cmd *exec.Cmd

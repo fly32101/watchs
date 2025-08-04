@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/watchs/domain/repository"
+	"github.com/watchs/presentation/cli/ui"
 )
 
 // InitCommand 初始化命令
@@ -49,7 +50,7 @@ func (c *InitCommand) Execute(args []string) error {
 
 	// 显示帮助信息
 	if *help {
-		fmt.Println("生成配置文件")
+		ui.PrintHeader("生成配置文件")
 		fmt.Println("\n用法: watchs init [选项]")
 		fmt.Println("\n选项:")
 		initCmd.PrintDefaults()
@@ -58,22 +59,27 @@ func (c *InitCommand) Execute(args []string) error {
 
 	// 检查配置文件是否已存在
 	if _, err := os.Stat(*configPath); err == nil && !*force {
+		ui.PrintError(fmt.Sprintf("配置文件 %s 已存在，使用 -force 参数覆盖", *configPath))
 		return fmt.Errorf("配置文件 %s 已存在，使用 -force 参数覆盖", *configPath)
 	}
+
+	ui.PrintInfo("正在创建配置文件...")
 
 	// 创建配置
 	config, err := createConfigFromArgs(*watchDir, *fileTypes, *excludePaths, *command)
 	if err != nil {
+		ui.PrintError(fmt.Sprintf("创建配置失败: %v", err))
 		return fmt.Errorf("创建配置失败: %v", err)
 	}
 
 	// 保存配置
 	if err := c.configRepo.SaveConfig(config, *configPath); err != nil {
+		ui.PrintError(fmt.Sprintf("保存配置文件失败: %v", err))
 		return fmt.Errorf("保存配置文件失败: %v", err)
 	}
 
 	// 显示配置信息
-	fmt.Printf("配置文件已生成: %s\n", *configPath)
+	ui.PrintSuccess(fmt.Sprintf("配置文件已生成: %s", *configPath))
 	fmt.Printf("监控目录: %s\n", config.WatchDir)
 	if len(config.FileTypes) > 0 {
 		fmt.Printf("监控的文件类型: %v\n", config.FileTypes)

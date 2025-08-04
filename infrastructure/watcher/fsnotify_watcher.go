@@ -9,6 +9,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/watchs/domain/entity"
+	"github.com/watchs/presentation/cli/ui"
 )
 
 // FSNotifyWatcher 是基于fsnotify的文件监控服务实现
@@ -49,14 +50,14 @@ func (w *FSNotifyWatcher) Start() error {
 		return err
 	}
 
-	log.Printf("开始监控目录: %s", w.config.WatchDir)
+	ui.PrintSuccess(fmt.Sprintf("开始监控目录: %s", w.config.WatchDir))
 	if len(w.config.FileTypes) > 0 {
-		log.Printf("监控的文件类型: %v", w.config.FileTypes)
+		ui.PrintInfo(fmt.Sprintf("监控的文件类型: %v", w.config.FileTypes))
 	} else {
-		log.Printf("监控所有文件类型")
+		ui.PrintInfo("监控所有文件类型")
 	}
 	if len(w.config.ExcludePaths) > 0 {
-		log.Printf("排除的路径: %v", w.config.ExcludePaths)
+		ui.PrintInfo(fmt.Sprintf("排除的路径: %v", w.config.ExcludePaths))
 	}
 
 	// 监听事件
@@ -157,7 +158,7 @@ func (w *FSNotifyWatcher) watchEvents() {
 			}
 
 			fileEvent := entity.NewFileEvent(event.Name, eventType)
-			log.Printf("检测到文件变化: %s, 事件类型: %v", event.Name, eventType)
+			ui.PrintEvent(fileEvent)
 
 			// 通知所有处理器
 			w.mu.RLock()
@@ -174,7 +175,7 @@ func (w *FSNotifyWatcher) watchEvents() {
 			if !ok {
 				return
 			}
-			log.Printf("监控错误: %v", err)
+			ui.PrintError(fmt.Sprintf("监控错误: %v", err))
 		}
 	}
 }

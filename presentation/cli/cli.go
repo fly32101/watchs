@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -45,7 +44,7 @@ func (c *CLI) Run() {
 		// 默认执行watch命令
 		cmd := c.registry.GetDefaultCommand()
 		if err := cmd.Execute(nil); err != nil {
-			log.Fatalf("错误: %v", err)
+			log.Printf("错误: %v", err)
 		}
 		return
 	}
@@ -59,14 +58,14 @@ func (c *CLI) Run() {
 		// 如果命令不存在，尝试将参数作为watch命令的参数
 		cmd = c.registry.GetDefaultCommand()
 		if err := cmd.Execute(os.Args[1:]); err != nil {
-			log.Fatalf("错误: %v", err)
+			log.Printf("错误: %v", err)
 		}
 		return
 	}
 
 	// 执行命令
 	if err := cmd.Execute(os.Args[2:]); err != nil {
-		fmt.Printf("错误: %v\n", err)
+		log.Printf("错误: %v", err)
 		os.Exit(1)
 	}
 }

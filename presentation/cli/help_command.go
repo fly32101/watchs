@@ -1,6 +1,10 @@
 package cli
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/watchs/presentation/cli/ui"
+)
 
 // HelpCommand 帮助命令
 type HelpCommand struct {
@@ -31,6 +35,7 @@ func (c *HelpCommand) Execute(args []string) error {
 		cmdName := args[0]
 		cmd, ok := c.registry.Get(cmdName)
 		if !ok {
+			ui.PrintError(fmt.Sprintf("未知命令: %s", cmdName))
 			return fmt.Errorf("未知命令: %s", cmdName)
 		}
 
@@ -39,6 +44,14 @@ func (c *HelpCommand) Execute(args []string) error {
 	}
 
 	// 显示所有命令的帮助信息
-	c.registry.ShowHelp()
+	ui.PrintHeader("Watchs - 文件变更监控工具")
+	fmt.Println("\n可用命令:")
+
+	commands := c.registry.ListCommands()
+	for _, cmd := range commands {
+		fmt.Printf("  %s%s%s\t%s\n", ui.Green, cmd.Name(), ui.Reset, cmd.Description())
+	}
+
+	fmt.Println("\n使用 'watchs <命令> --help' 获取更多信息")
 	return nil
 }

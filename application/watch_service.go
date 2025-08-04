@@ -1,11 +1,12 @@
 package application
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/watchs/domain/entity"
 	"github.com/watchs/domain/service"
+	"github.com/watchs/presentation/cli/ui"
 )
 
 // WatchService 是应用层的文件监控服务
@@ -51,12 +52,14 @@ func (s *WatchService) Start() error {
 	// 启动监控服务
 	if err := s.watcherService.Start(); err != nil {
 		s.isRunning = false
+		ui.PrintError(fmt.Sprintf("启动监控服务失败: %v", err))
 		return err
 	}
 
 	// 执行初始命令
+	ui.PrintInfo("执行初始命令...")
 	if err := s.commandExecutor.Execute(s.config.Command, s.config.WatchDir); err != nil {
-		log.Printf("执行初始命令失败: %v", err)
+		ui.PrintWarning(fmt.Sprintf("执行初始命令失败: %v", err))
 	}
 
 	return nil
@@ -71,7 +74,7 @@ func (s *WatchService) Stop() error {
 
 	// 终止命令
 	if err := s.commandExecutor.Terminate(); err != nil {
-		log.Printf("终止命令失败: %v", err)
+		ui.PrintWarning(fmt.Sprintf("终止命令失败: %v", err))
 	}
 
 	// 停止监控服务

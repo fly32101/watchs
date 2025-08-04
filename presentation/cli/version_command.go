@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+
+	"github.com/watchs/presentation/cli/ui"
 )
 
 // 版本信息，将由main包传入
@@ -31,6 +33,11 @@ func (c *VersionCommand) Description() string {
 
 // Execute 执行命令
 func (c *VersionCommand) Execute(args []string) error {
-	fmt.Printf("watchs version %s, commit %s, built at %s\n", Version, Commit, Date)
+	ui.PrintHeader("Watchs 版本信息")
+	fmt.Printf("%s%s%s version %s%s%s, commit %s%s%s, built at %s%s%s\n",
+		ui.Blue, ui.Rocket, ui.Reset,
+		ui.Green, Version, ui.Reset,
+		ui.Yellow, Commit, ui.Reset,
+		ui.Purple, Date, ui.Reset)
 	return nil
 }
