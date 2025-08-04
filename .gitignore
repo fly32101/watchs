@@ -1,0 +1,35 @@
+# 编译产物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+watchs
+
+# Go特定文件
+/vendor/
+/Godeps/
+
+# IDE和编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 日志文件
+*.log
+
+# 测试配置和临时文件
+watchs.json
+test/output.log
+test/*.json
+
+# 依赖管理
+go.work
+
+# 操作系统特定文件
+Thumbs.db 
