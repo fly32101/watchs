@@ -84,34 +84,107 @@ jobs:
           echo "Finding main.go files:"
           Get-ChildItem -Path . -Filter "main.go" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
 
+      - name: Create main.go if missing (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          if [ ! -d "cmd/watchs" ]; then
+            echo "Creating cmd/watchs directory..."
+            mkdir -p cmd/watchs
+          fi
+          
+          if [ ! -f "cmd/watchs/main.go" ]; then
+            echo "Creating main.go file..."
+            cat > cmd/watchs/main.go << 'EOF'
+package main
+
+import (
+	"log"
+
+	"github.com/watchs/presentation/cli"
+)
+
+// 版本信息，将由GoReleaser在构建时注入
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func main() {
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	// 设置版本信息
+	cli.Version = version
+	cli.Commit = commit
+	cli.Date = date
+
+	// 创建并运行CLI
+	cli := cli.NewCLI()
+	cli.Run()
+}
+EOF
+          fi
+          
+          echo "Content of main.go:"
+          cat cmd/watchs/main.go
+
+      - name: Create main.go if missing (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if (-Not (Test-Path -Path "cmd/watchs")) {
+            echo "Creating cmd/watchs directory..."
+            New-Item -Path "cmd/watchs" -ItemType Directory -Force
+          }
+          
+          if (-Not (Test-Path -Path "cmd/watchs/main.go")) {
+            echo "Creating main.go file..."
+            $content = @'
+package main
+
+import (
+	"log"
+
+	"github.com/watchs/presentation/cli"
+)
+
+// 版本信息，将由GoReleaser在构建时注入
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func main() {
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	// 设置版本信息
+	cli.Version = version
+	cli.Commit = commit
+	cli.Date = date
+
+	// 创建并运行CLI
+	cli := cli.NewCLI()
+	cli.Run()
+}
+'@
+            Set-Content -Path "cmd/watchs/main.go" -Value $content
+          }
+          
+          echo "Content of main.go:"
+          Get-Content -Path "cmd/watchs/main.go"
+
       - name: Get dependencies
         run: go mod download
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
-        run: |
-          # 检查cmd/watchs目录是否存在
-          if [ -d "cmd/watchs" ]; then
-            go build -v -o ${{ matrix.output_name }} ./cmd/watchs
-          else
-            echo "Error: cmd/watchs directory not found"
-            # 尝试查找main.go文件
-            find . -name "main.go"
-            exit 1
-          fi
+        run: go build -v -o ${{ matrix.output_name }} ./cmd/watchs
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        run: |
-          # 检查cmd/watchs目录是否存在
-          if (Test-Path -Path "cmd/watchs") {
-            go build -v -o ${{ matrix.output_name }} ./cmd/watchs
-          } else {
-            echo "Error: cmd/watchs directory not found"
-            # 尝试查找main.go文件
-            Get-ChildItem -Path . -Filter "main.go" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
-            exit 1
-          }
+        run: go build -v -o ${{ matrix.output_name }} ./cmd/watchs
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
