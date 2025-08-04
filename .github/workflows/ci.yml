@@ -22,6 +22,43 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
+          cache: true
+
+      - name: List directory structure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: find . -type d | sort
+
+      - name: List directory structure (Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem -Recurse -Directory | Select-Object FullName | Sort-Object FullName
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            output_name: watchs-linux-amd64
+          - os: windows-latest
+            output_name: watchs-windows-amd64.exe
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
 
       - name: Debug directory structure (Linux/macOS)
         if: runner.os != 'Windows'
@@ -50,6 +87,78 @@ jobs:
           Get-ChildItem -Path . -Filter "*.go" -Recurse | Select-Object FullName | Sort-Object FullName
           echo "All main.go files:"
           Get-ChildItem -Path . -Filter "main.go" -Recurse | Select-Object FullName | Sort-Object FullName
+
+      - name: Find and use main.go (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          # 查找所有main.go文件
+          MAIN_FILES=$(find . -name "main.go" | sort)
+          
+          if [ -z "$MAIN_FILES" ]; then
+            echo "Error: No main.go files found in the repository."
+            exit 1
+          fi
+          
+          # 输出找到的所有main.go文件
+          echo "Found main.go files:"
+          echo "$MAIN_FILES"
+          
+          # 尝试找到cmd/watchs/main.go
+          if [ -f "cmd/watchs/main.go" ]; then
+            echo "Found cmd/watchs/main.go - using this file"
+            MAIN_FILE="cmd/watchs/main.go"
+          else
+            # 如果找不到cmd/watchs/main.go，使用找到的第一个main.go
+            MAIN_FILE=$(echo "$MAIN_FILES" | head -n 1)
+            echo "cmd/watchs/main.go not found, using first main.go: $MAIN_FILE"
+          
+            # 创建cmd/watchs目录（如果不存在）
+            mkdir -p cmd/watchs
+          
+            # 复制找到的main.go到cmd/watchs/main.go
+            cp "$MAIN_FILE" cmd/watchs/main.go
+            echo "Copied $MAIN_FILE to cmd/watchs/main.go"
+          fi
+          
+          echo "Content of main.go to be used:"
+          cat cmd/watchs/main.go
+
+      - name: Find and use main.go (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # 查找所有main.go文件
+          $mainFiles = Get-ChildItem -Path . -Filter "main.go" -Recurse | Select-Object -ExpandProperty FullName
+          
+          if ($null -eq $mainFiles -or $mainFiles.Count -eq 0) {
+            echo "Error: No main.go files found in the repository."
+            exit 1
+          }
+          
+          # 输出找到的所有main.go文件
+          echo "Found main.go files:"
+          $mainFiles | ForEach-Object { echo $_ }
+          
+          # 尝试找到cmd/watchs/main.go
+          if (Test-Path -Path "cmd/watchs/main.go") {
+            echo "Found cmd/watchs/main.go - using this file"
+            $mainFile = "cmd/watchs/main.go"
+          } else {
+            # 如果找不到cmd/watchs/main.go，使用找到的第一个main.go
+            $mainFile = $mainFiles[0]
+            echo "cmd/watchs/main.go not found, using first main.go: $mainFile"
+          
+            # 创建cmd/watchs目录（如果不存在）
+            if (-Not (Test-Path -Path "cmd/watchs")) {
+              New-Item -Path "cmd/watchs" -ItemType Directory -Force
+            }
+          
+            # 复制找到的main.go到cmd/watchs/main.go
+            Copy-Item -Path $mainFile -Destination "cmd/watchs/main.go"
+            echo "Copied $mainFile to cmd/watchs/main.go"
+          }
+          
+          echo "Content of main.go to be used:"
+          Get-Content -Path "cmd/watchs/main.go"
 
       - name: Get dependencies
         run: go mod download
