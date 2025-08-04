@@ -6,7 +6,6 @@
 *.dylib
 *.test
 *.out
-watchs
 
 # Go特定文件
 /vendor/
