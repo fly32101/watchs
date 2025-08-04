@@ -4,51 +4,52 @@
 
 ## 功能特点
 
-- 监控指定目录下的文件变化（递归）
-- 可以按文件类型过滤（支持多类型）
-- 可以排除特定目录或文件
-- 文件变化时执行指定命令
-- 支持配置文件和命令行参数
-- 支持通过命令行生成配置文件
-- 支持交互式配置向导
-- 基于DDD架构，代码结构清晰，易于维护和扩展
-- 使用命令模式实现可扩展的命令行界面
-- 集成GitHub Actions自动化构建和发布
+* 监控指定目录下的文件变化（递归）
+* 可以按文件类型过滤（支持多类型）
+* 可以排除特定目录或文件
+* 文件变化时执行指定命令
+* 支持配置文件和命令行参数
+* 支持通过命令行生成配置文件
+* 支持交互式配置向导
+* 基于DDD架构，代码结构清晰，易于维护和扩展
+* 使用命令模式实现可扩展的命令行界面
+* 集成GitHub Actions自动化构建和发布
+
+## 最新版本
+
+当前最新版本为 [v1.0.0](https://github.com/fly32101/watchs/releases/tag/v1.0.0)，已通过GitHub Actions自动构建并发布。
 
 ## 项目架构
 
 项目采用DDD（领域驱动设计）架构，分为以下几层：
 
-- **领域层（Domain）**：包含核心业务逻辑和实体
-  - `entity`：领域实体，如配置和文件事件
-  - `service`：领域服务接口
-  - `repository`：仓储接口
-
-- **应用层（Application）**：协调领域对象完成用户任务
-  - 应用服务，如文件监控服务
-
-- **基础设施层（Infrastructure）**：提供技术实现
-  - `persistence`：配置持久化实现
-  - `watcher`：文件监控和命令执行实现
-
-- **表示层（Presentation）**：处理用户交互
-  - `cli`：命令行界面，使用命令模式实现
+* **领域层（Domain）**：包含核心业务逻辑和实体  
+   * `entity`：领域实体，如配置和文件事件  
+   * `service`：领域服务接口  
+   * `repository`：仓储接口
+* **应用层（Application）**：协调领域对象完成用户任务  
+   * 应用服务，如文件监控服务
+* **基础设施层（Infrastructure）**：提供技术实现  
+   * `persistence`：配置持久化实现  
+   * `watcher`：文件监控和命令执行实现
+* **表示层（Presentation）**：处理用户交互  
+   * `cli`：命令行界面，使用命令模式实现
 
 ### 设计模式
 
 项目使用了以下设计模式：
 
-- **命令模式（Command Pattern）**：将命令行操作封装为对象，实现命令的可扩展性和可组合性
-- **依赖注入（Dependency Injection）**：通过构造函数注入依赖，降低组件间耦合
-- **仓储模式（Repository Pattern）**：抽象数据访问逻辑，实现持久化与领域逻辑的分离
-- **工厂方法（Factory Method）**：创建复杂对象，封装对象创建逻辑
+* **命令模式（Command Pattern）**：将命令行操作封装为对象，实现命令的可扩展性和可组合性
+* **依赖注入（Dependency Injection）**：通过构造函数注入依赖，降低组件间耦合
+* **仓储模式（Repository Pattern）**：抽象数据访问逻辑，实现持久化与领域逻辑的分离
+* **工厂方法（Factory Method）**：创建复杂对象，封装对象创建逻辑
 
 ## 自动化构建与发布
 
 项目使用GitHub Actions进行自动化构建和发布：
 
-- **持续集成（CI）**：在每次代码推送和PR时，自动在Linux和Windows上使用Go 1.21进行测试和构建
-- **自动发布**：在创建新的标签（如v1.0.0）时，自动构建二进制文件并创建GitHub Release
+* **持续集成（CI）**：在每次代码推送和PR时，自动在Linux和Windows上使用Go 1.21进行测试和构建
+* **自动发布**：在创建新的标签（如v1.0.0）时，自动构建二进制文件并创建GitHub Release
 
 ### 发布新版本
 
@@ -65,18 +66,20 @@ GitHub Actions将自动构建二进制文件并创建Release。
 
 ### 从GitHub Releases安装
 
-访问[GitHub Releases](https://github.com/yourusername/watchs/releases)页面，下载适合你系统的二进制文件。
+访问[GitHub Releases页面](https://github.com/fly32101/watchs/releases)，下载适合你系统的二进制文件：
+- Linux: `watchs-linux-amd64`
+- Windows: `watchs-windows-amd64.exe`
 
 ### 从源码安装
 
 ```bash
-go install github.com/watchs/cmd/watchs@latest
+go install github.com/fly32101/watchs/cmd/watchs@latest
 ```
 
 或者从源码编译：
 
 ```bash
-git clone https://github.com/yourusername/watchs.git
+git clone https://github.com/fly32101/watchs.git
 cd watchs
 go build -o watchs ./cmd/watchs
 ```
@@ -121,12 +124,13 @@ watchs init -config watchs.json -dir ./ -types .go,.js -exclude vendor,node_modu
 ```
 
 参数说明：
-- `-config`: 配置文件路径（默认为 `watchs.json`）
-- `-dir`: 要监控的目录（默认为 `./`）
-- `-types`: 要监控的文件类型，以逗号分隔
-- `-exclude`: 要排除的路径，以逗号分隔
-- `-cmd`: 文件变化时执行的命令（默认为 `echo 文件已更新`）
-- `-force`: 是否强制覆盖已存在的配置文件
+
+* `-config`: 配置文件路径（默认为 `watchs.json`）
+* `-dir`: 要监控的目录（默认为 `./`）
+* `-types`: 要监控的文件类型，以逗号分隔
+* `-exclude`: 要排除的路径，以逗号分隔
+* `-cmd`: 文件变化时执行的命令（默认为 `echo 文件已更新`）
+* `-force`: 是否强制覆盖已存在的配置文件
 
 ### 使用配置文件
 
@@ -166,21 +170,21 @@ watchs watch -dir ./ -types .go,.json -exclude vendor,node_modules,.git -cmd "go
 
 ### 监控命令参数 (watch)
 
-- `-config`: 配置文件路径（默认为 `watchs.json`）
-- `-dir`: 要监控的目录（覆盖配置文件）
-- `-types`: 要监控的文件类型，以逗号分隔（覆盖配置文件）
-- `-exclude`: 要排除的路径，以逗号分隔（覆盖配置文件）
-- `-cmd`: 文件变化时执行的命令（覆盖配置文件）
-- `-debounce`: 防抖时间，单位毫秒（默认为500）
+* `-config`: 配置文件路径（默认为 `watchs.json`）
+* `-dir`: 要监控的目录（覆盖配置文件）
+* `-types`: 要监控的文件类型，以逗号分隔（覆盖配置文件）
+* `-exclude`: 要排除的路径，以逗号分隔（覆盖配置文件）
+* `-cmd`: 文件变化时执行的命令（覆盖配置文件）
+* `-debounce`: 防抖时间，单位毫秒（默认为500）
 
 ### 初始化命令参数 (init)
 
-- `-config`: 配置文件路径（默认为 `watchs.json`）
-- `-dir`: 要监控的目录（默认为 `./`）
-- `-types`: 要监控的文件类型，以逗号分隔
-- `-exclude`: 要排除的路径，以逗号分隔
-- `-cmd`: 文件变化时执行的命令（默认为 `echo 文件已更新`）
-- `-force`: 是否强制覆盖已存在的配置文件
+* `-config`: 配置文件路径（默认为 `watchs.json`）
+* `-dir`: 要监控的目录（默认为 `./`）
+* `-types`: 要监控的文件类型，以逗号分隔
+* `-exclude`: 要排除的路径，以逗号分隔
+* `-cmd`: 文件变化时执行的命令（默认为 `echo 文件已更新`）
+* `-force`: 是否强制覆盖已存在的配置文件
 
 ## 示例
 
@@ -254,6 +258,19 @@ registry.Register(NewMyCommand(...))
 
 ## 注意事项
 
-- 命令会在监控目录下执行
-- 如果命令是长时间运行的进程，当文件再次变化时，之前的进程会被终止并重新启动
-- 使用防抖机制避免频繁触发命令执行 
+* 命令会在监控目录下执行
+* 如果命令是长时间运行的进程，当文件再次变化时，之前的进程会被终止并重新启动
+* 使用防抖机制避免频繁触发命令执行
+
+## 开源协议
+
+本项目采用 [MIT 许可证](LICENSE)。
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request。
+
+## 相关链接
+
+- [GitHub 仓库](https://github.com/fly32101/watchs)
+- [发布页面](https://github.com/fly32101/watchs/releases) 
