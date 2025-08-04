@@ -30,6 +30,7 @@ func NewCLI() *CLI {
 	registry.Register(NewWatchCommand(configRepo))
 	registry.Register(NewInitCommand(configRepo))
 	registry.Register(NewInteractiveCommand(configRepo))
+	registry.Register(NewVersionCommand())
 
 	// 注册帮助命令（需要在其他命令注册后）
 	registry.Register(NewHelpCommand(registry))

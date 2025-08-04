@@ -13,6 +13,7 @@
 - 支持交互式配置向导
 - 基于DDD架构，代码结构清晰，易于维护和扩展
 - 使用命令模式实现可扩展的命令行界面
+- 集成GitHub Actions自动化构建和发布
 
 ## 项目架构
 
@@ -42,7 +43,31 @@
 - **仓储模式（Repository Pattern）**：抽象数据访问逻辑，实现持久化与领域逻辑的分离
 - **工厂方法（Factory Method）**：创建复杂对象，封装对象创建逻辑
 
+## 自动化构建与发布
+
+项目使用GitHub Actions进行自动化构建和发布：
+
+- **持续集成（CI）**：在每次代码推送和PR时，自动在多个操作系统（Linux、Windows、macOS）和多个Go版本上进行测试和构建
+- **自动发布**：在创建新的标签（如v1.0.0）时，自动构建二进制文件并创建GitHub Release
+
+### 发布新版本
+
+要发布新版本，只需创建并推送一个新的标签：
+
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
+GitHub Actions将自动构建二进制文件并创建Release。
+
 ## 安装
+
+### 从GitHub Releases安装
+
+访问[GitHub Releases](https://github.com/yourusername/watchs/releases)页面，下载适合你系统的二进制文件。
+
+### 从源码安装
 
 ```bash
 go install github.com/watchs/cmd/watchs@latest
@@ -69,6 +94,12 @@ watchs help
 ```bash
 watchs help <命令名称>
 watchs <命令名称> --help
+```
+
+### 查看版本信息
+
+```bash
+watchs version
 ```
 
 ### 交互式配置

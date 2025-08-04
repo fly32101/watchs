@@ -13,6 +13,7 @@ A file change monitoring tool based on DDD (Domain-Driven Design) architecture t
 - Interactive configuration wizard
 - Clean, maintainable, and extensible code based on DDD architecture
 - Extensible command-line interface using the Command Pattern
+- Integrated GitHub Actions for automated builds and releases
 
 ## Project Architecture
 
@@ -42,7 +43,31 @@ The project uses the following design patterns:
 - **Repository Pattern**: Abstracts data access logic, separating persistence from domain logic
 - **Factory Method**: Creates complex objects, encapsulating object creation logic
 
+## Automated Builds and Releases
+
+The project uses GitHub Actions for automated builds and releases:
+
+- **Continuous Integration (CI)**: Automatically tests and builds on multiple operating systems (Linux, Windows, macOS) and multiple Go versions on every code push and PR
+- **Automated Releases**: Automatically builds binaries and creates GitHub Releases when a new tag is created (e.g., v1.0.0)
+
+### Releasing a New Version
+
+To release a new version, simply create and push a new tag:
+
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
+GitHub Actions will automatically build binaries and create a Release.
+
 ## Installation
+
+### From GitHub Releases
+
+Visit the [GitHub Releases](https://github.com/yourusername/watchs/releases) page and download the binary for your system.
+
+### From Source
 
 ```bash
 go install github.com/watchs/cmd/watchs@latest
@@ -69,6 +94,12 @@ Or view help for a specific command:
 ```bash
 watchs help <command_name>
 watchs <command_name> --help
+```
+
+### View Version Information
+
+```bash
+watchs version
 ```
 
 ### Interactive Configuration
