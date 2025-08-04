@@ -37,45 +37,11 @@ jobs:
           echo "Repository structure:"
           find . -type d | sort || echo "Failed to list directories"
 
-      - name: Create main.go if missing
+      - name: Check main.go exists
         run: |
-          if [ ! -d "cmd/watchs" ]; then
-            echo "Creating cmd/watchs directory..."
-            mkdir -p cmd/watchs
-          fi
-          
           if [ ! -f "cmd/watchs/main.go" ]; then
-            echo "Creating main.go file..."
-            cat > cmd/watchs/main.go << 'EOF'
-package main
-
-import (
-	"log"
-
-	"github.com/watchs/presentation/cli"
-)
-
-// 版本信息，将由GoReleaser在构建时注入
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
-
-func main() {
-	// 设置日志格式
-	log.SetFlags(log.Ldate | log.Ltime)
-
-	// 设置版本信息
-	cli.Version = version
-	cli.Commit = commit
-	cli.Date = date
-
-	// 创建并运行CLI
-	cli := cli.NewCLI()
-	cli.Run()
-}
-EOF
+            echo "Error: cmd/watchs/main.go file not found. Please ensure this file is committed to the repository."
+            exit 1
           fi
           
           echo "Content of main.go:"
