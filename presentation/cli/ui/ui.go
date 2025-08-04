@@ -63,7 +63,7 @@ func PrintHeader(message string) {
 func PrintEvent(event *entity.FileEvent) {
 	var emoji string
 	var color string
-	
+
 	switch event.Type {
 	case entity.EventCreate:
 		emoji = "📄"
@@ -84,8 +84,8 @@ func PrintEvent(event *entity.FileEvent) {
 		emoji = "❓"
 		color = Gray
 	}
-	
-	fmt.Fprintf(os.Stderr, "%s%s%s %s %s%s%s\n", color, emoji, Reset, event.Path, Gray, event.Type, Reset)
+
+	fmt.Fprintf(os.Stderr, "%s%s%s %s %s%s%s\n", color, emoji, Reset, event.Path, Gray, string(event.Type), Reset)
 }
 
 // PrintProgressBar 显示进度条
@@ -93,14 +93,14 @@ func PrintProgressBar(current, total int, label string) {
 	const barLength = 20
 	progress := current * barLength / total
 	percentage := current * 100 / total
-	
+
 	fmt.Fprintf(os.Stderr, "\r%s [%s%s] %d%% %s",
 		WatchEmoji,
 		Green+string([]rune("████████████████████")[:progress])+Reset,
 		Gray+string([]rune("                    ")[progress:])+Reset,
 		percentage,
 		label)
-	
+
 	if current == total {
 		fmt.Fprintln(os.Stderr)
 	}
@@ -110,7 +110,7 @@ func PrintProgressBar(current, total int, label string) {
 func SimulateLoading(duration time.Duration, message string) {
 	chars := []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"}
 	endTime := time.Now().Add(duration)
-	
+
 	i := 0
 	for time.Now().Before(endTime) {
 		fmt.Fprintf(os.Stderr, "\r%s %s %s", Lightning, chars[i%len(chars)], message)
