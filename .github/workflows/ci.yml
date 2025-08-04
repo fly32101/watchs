@@ -24,11 +24,11 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
 
-      - name: List directory structure (Linux/macOS)
+      - name: Debug directory structure (Linux/macOS)
         if: runner.os != 'Windows'
         run: find . -type d | sort
 
-      - name: List directory structure (Windows)
+      - name: Debug directory structure (Windows)
         if: runner.os == 'Windows'
         run: Get-ChildItem -Recurse -Directory | Select-Object FullName | Sort-Object FullName
 
@@ -88,76 +88,87 @@ jobs:
           echo "All main.go files:"
           Get-ChildItem -Path . -Filter "main.go" -Recurse | Select-Object FullName | Sort-Object FullName
 
-      - name: Find and use main.go (Linux/macOS)
+      - name: Create main.go (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          # 查找所有main.go文件
-          MAIN_FILES=$(find . -name "main.go" | sort)
+          # 创建cmd/watchs目录
+          mkdir -p cmd/watchs
           
-          if [ -z "$MAIN_FILES" ]; then
-            echo "Error: No main.go files found in the repository."
-            exit 1
-          fi
+          # 创建main.go文件
+          cat > cmd/watchs/main.go << 'EOF'
+package main
+
+import (
+	"log"
+
+	"github.com/watchs/presentation/cli"
+)
+
+// 版本信息，将由GoReleaser在构建时注入
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func main() {
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	// 设置版本信息
+	cli.Version = version
+	cli.Commit = commit
+	cli.Date = date
+
+	// 创建并运行CLI
+	cli := cli.NewCLI()
+	cli.Run()
+}
+EOF
           
-          # 输出找到的所有main.go文件
-          echo "Found main.go files:"
-          echo "$MAIN_FILES"
-          
-          # 尝试找到cmd/watchs/main.go
-          if [ -f "cmd/watchs/main.go" ]; then
-            echo "Found cmd/watchs/main.go - using this file"
-            MAIN_FILE="cmd/watchs/main.go"
-          else
-            # 如果找不到cmd/watchs/main.go，使用找到的第一个main.go
-            MAIN_FILE=$(echo "$MAIN_FILES" | head -n 1)
-            echo "cmd/watchs/main.go not found, using first main.go: $MAIN_FILE"
-            
-            # 创建cmd/watchs目录（如果不存在）
-            mkdir -p cmd/watchs
-            
-            # 复制找到的main.go到cmd/watchs/main.go
-            cp "$MAIN_FILE" cmd/watchs/main.go
-            echo "Copied $MAIN_FILE to cmd/watchs/main.go"
-          fi
-          
-          echo "Content of main.go to be used:"
+          echo "Content of created main.go:"
           cat cmd/watchs/main.go
 
-      - name: Find and use main.go (Windows)
+      - name: Create main.go (Windows)
         if: runner.os == 'Windows'
         run: |
-          # 查找所有main.go文件
-          $mainFiles = Get-ChildItem -Path . -Filter "main.go" -Recurse | Select-Object -ExpandProperty FullName
+          # 创建cmd/watchs目录
+          New-Item -Path "cmd/watchs" -ItemType Directory -Force
           
-          if ($null -eq $mainFiles -or $mainFiles.Count -eq 0) {
-            echo "Error: No main.go files found in the repository."
-            exit 1
-          }
+          # 创建main.go文件
+          $content = @'
+package main
+
+import (
+	"log"
+
+	"github.com/watchs/presentation/cli"
+)
+
+// 版本信息，将由GoReleaser在构建时注入
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func main() {
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	// 设置版本信息
+	cli.Version = version
+	cli.Commit = commit
+	cli.Date = date
+
+	// 创建并运行CLI
+	cli := cli.NewCLI()
+	cli.Run()
+}
+'@
+          Set-Content -Path "cmd/watchs/main.go" -Value $content
           
-          # 输出找到的所有main.go文件
-          echo "Found main.go files:"
-          $mainFiles | ForEach-Object { echo $_ }
-          
-          # 尝试找到cmd/watchs/main.go
-          if (Test-Path -Path "cmd/watchs/main.go") {
-            echo "Found cmd/watchs/main.go - using this file"
-            $mainFile = "cmd/watchs/main.go"
-          } else {
-            # 如果找不到cmd/watchs/main.go，使用找到的第一个main.go
-            $mainFile = $mainFiles[0]
-            echo "cmd/watchs/main.go not found, using first main.go: $mainFile"
-            
-            # 创建cmd/watchs目录（如果不存在）
-            if (-Not (Test-Path -Path "cmd/watchs")) {
-              New-Item -Path "cmd/watchs" -ItemType Directory -Force
-            }
-            
-            # 复制找到的main.go到cmd/watchs/main.go
-            Copy-Item -Path $mainFile -Destination "cmd/watchs/main.go"
-            echo "Copied $mainFile to cmd/watchs/main.go"
-          }
-          
-          echo "Content of main.go to be used:"
+          echo "Content of created main.go:"
           Get-Content -Path "cmd/watchs/main.go"
 
       - name: Get dependencies
