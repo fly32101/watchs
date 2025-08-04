@@ -47,7 +47,7 @@ The project uses the following design patterns:
 
 The project uses GitHub Actions for automated builds and releases:
 
-- **Continuous Integration (CI)**: Automatically tests and builds on multiple operating systems (Linux, Windows, macOS) and multiple Go versions on every code push and PR
+- **Continuous Integration (CI)**: Automatically tests and builds on Linux and Windows using Go 1.21 on every code push and PR
 - **Automated Releases**: Automatically builds binaries and creates GitHub Releases when a new tag is created (e.g., v1.0.0)
 
 ### Releasing a New Version
