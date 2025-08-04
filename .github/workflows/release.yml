@@ -24,6 +24,17 @@ jobs:
           go-version: '1.21'
           cache: true
 
+      - name: List directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "cmd directory contents:"
+          ls -la cmd || echo "cmd directory not found"
+          echo "Finding main.go files:"
+          find . -name "main.go"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

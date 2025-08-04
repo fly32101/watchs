@@ -24,6 +24,9 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
 
+      - name: List directory structure
+        run: find . -type d | sort
+
       - name: Get dependencies
         run: go mod download
 
@@ -52,11 +55,29 @@ jobs:
           go-version: '1.21'
           cache: true
 
+      - name: List directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "cmd directory contents:"
+          ls -la cmd || echo "cmd directory not found"
+
       - name: Get dependencies
         run: go mod download
 
       - name: Build
-        run: go build -v -o ${{ matrix.output_name }} ./cmd/watchs
+        run: |
+          # 检查cmd/watchs目录是否存在
+          if [ -d "cmd/watchs" ]; then
+            go build -v -o ${{ matrix.output_name }} ./cmd/watchs
+          else
+            echo "Error: cmd/watchs directory not found"
+            # 尝试查找main.go文件
+            find . -name "main.go"
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
