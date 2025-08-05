@@ -1,0 +1,211 @@
+# GitLab CI/CD 配置文件
+# 支持多平台构建和自动发布
+
+# 定义构建阶段
+stages:
+  - test
+  - build
+  - release
+
+# 定义变量
+variables:
+  GO_VERSION: "1.21"
+  PACKAGE_NAME: "watchs"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}"
+
+# 缓存配置
+cache:
+  paths:
+    - .cache
+
+# 测试阶段
+test:
+  stage: test
+  image: golang:${GO_VERSION}
+  before_script:
+    - mkdir -p .cache
+    - export GOPATH="$CI_PROJECT_DIR/.cache"
+    - export GOCACHE="$CI_PROJECT_DIR/.cache/build"
+    - export GOMODCACHE="$CI_PROJECT_DIR/.cache/mod"
+  script:
+    - echo "Running tests..."
+    - go version
+    - go mod download
+    - go vet ./...
+    - go test -v ./...
+    - go build -v ./cmd/watchs
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+
+# 构建阶段 - 仅在推送tag时执行
+build:
+  stage: build
+  image: golang:${GO_VERSION}
+  before_script:
+    - mkdir -p .cache
+    - export GOPATH="$CI_PROJECT_DIR/.cache"
+    - export GOCACHE="$CI_PROJECT_DIR/.cache/build"
+    - export GOMODCACHE="$CI_PROJECT_DIR/.cache/mod"
+    - apt-get update -qq && apt-get install -y -qq git curl
+  script:
+    - echo "Building for multiple platforms..."
+    - mkdir -p dist
+    
+    # 设置版本信息
+    - export VERSION=${CI_COMMIT_TAG:-${CI_COMMIT_SHORT_SHA}}
+    - export COMMIT=${CI_COMMIT_SHA}
+    - export DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    - export LDFLAGS="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${DATE}"
+    
+    # 构建 Linux AMD64
+    - echo "Building Linux AMD64..."
+    - GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-linux-amd64 ./cmd/watchs
+    
+    # 构建 Linux ARM64
+    - echo "Building Linux ARM64..."
+    - GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-linux-arm64 ./cmd/watchs
+    
+    # 构建 Windows AMD64
+    - echo "Building Windows AMD64..."
+    - GOOS=windows GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-windows-amd64.exe ./cmd/watchs
+    
+    # 构建 macOS AMD64
+    - echo "Building macOS AMD64..."
+    - GOOS=darwin GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-darwin-amd64 ./cmd/watchs
+    
+    # 构建 macOS ARM64 (Apple Silicon)
+    - echo "Building macOS ARM64..."
+    - GOOS=darwin GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-darwin-arm64 ./cmd/watchs
+    
+    # 生成校验和
+    - cd dist
+    - sha256sum * > checksums.txt
+    - cd ..
+    
+    # 显示构建结果
+    - echo "Build completed successfully!"
+    - ls -la dist/
+  artifacts:
+    name: "${PACKAGE_NAME}-${CI_COMMIT_TAG:-${CI_COMMIT_SHORT_SHA}}"
+    paths:
+      - dist/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+# 发布阶段 - 创建GitLab Release
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build
+      artifacts: true
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - echo "Creating GitLab release..."
+    - export VERSION=${CI_COMMIT_TAG}
+    
+    # 上传构建产物到Package Registry
+    - |
+      for file in dist/*; do
+        filename=$(basename "$file")
+        echo "Uploading $filename..."
+        curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+             --upload-file "$file" \
+             "${PACKAGE_REGISTRY_URL}/${VERSION}/${filename}"
+      done
+    
+    # 生成发布说明
+    - |
+      cat > release_notes.md << EOF
+      ## Watchs ${VERSION}
+      
+      ### 📦 下载链接
+      
+      #### Linux
+      - [Linux AMD64](${PACKAGE_REGISTRY_URL}/${VERSION}/${PACKAGE_NAME}-linux-amd64)
+      - [Linux ARM64](${PACKAGE_REGISTRY_URL}/${VERSION}/${PACKAGE_NAME}-linux-arm64)
+      
+      #### Windows
+      - [Windows AMD64](${PACKAGE_REGISTRY_URL}/${VERSION}/${PACKAGE_NAME}-windows-amd64.exe)
+      
+      #### macOS
+      - [macOS Intel](${PACKAGE_REGISTRY_URL}/${VERSION}/${PACKAGE_NAME}-darwin-amd64)
+      - [macOS Apple Silicon](${PACKAGE_REGISTRY_URL}/${VERSION}/${PACKAGE_NAME}-darwin-arm64)
+      
+      #### 校验和
+      - [checksums.txt](${PACKAGE_REGISTRY_URL}/${VERSION}/checksums.txt)
+      
+      ### 🚀 安装方法
+      
+      下载对应平台的二进制文件，赋予执行权限即可使用：
+      
+      \`\`\`bash
+      # Linux/macOS
+      chmod +x ${PACKAGE_NAME}-*
+      ./${PACKAGE_NAME}-* version
+      
+      # Windows
+      ${PACKAGE_NAME}-windows-amd64.exe version
+      \`\`\`
+      
+      ### 📝 更新内容
+      
+      请查看提交历史了解详细更新内容。
+      EOF
+  release:
+    name: 'Release $CI_COMMIT_TAG'
+    description: './release_notes.md'
+    tag_name: '$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'Linux AMD64'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/${PACKAGE_NAME}-linux-amd64'
+          link_type: 'package'
+        - name: 'Linux ARM64'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/${PACKAGE_NAME}-linux-arm64'
+          link_type: 'package'
+        - name: 'Windows AMD64'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/${PACKAGE_NAME}-windows-amd64.exe'
+          link_type: 'package'
+        - name: 'macOS Intel'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/${PACKAGE_NAME}-darwin-amd64'
+          link_type: 'package'
+        - name: 'macOS Apple Silicon'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/${PACKAGE_NAME}-darwin-arm64'
+          link_type: 'package'
+        - name: 'Checksums'
+          url: '${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/checksums.txt'
+          link_type: 'other'
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+# 手动构建任务 - 可在GitLab界面手动触发
+manual_build:
+  stage: build
+  image: golang:${GO_VERSION}
+  before_script:
+    - mkdir -p .cache
+    - export GOPATH="$CI_PROJECT_DIR/.cache"
+    - export GOCACHE="$CI_PROJECT_DIR/.cache/build"
+    - export GOMODCACHE="$CI_PROJECT_DIR/.cache/mod"
+  script:
+    - echo "Manual build triggered..."
+    - go mod download
+    - mkdir -p dist
+    - export VERSION="manual-${CI_COMMIT_SHORT_SHA}"
+    - export LDFLAGS="-s -w -X main.version=${VERSION} -X main.commit=${CI_COMMIT_SHA} -X main.date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    - GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-linux-amd64 ./cmd/watchs
+    - GOOS=windows GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-windows-amd64.exe ./cmd/watchs
+    - GOOS=darwin GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/${PACKAGE_NAME}-darwin-amd64 ./cmd/watchs
+    - ls -la dist/
+  artifacts:
+    name: "${PACKAGE_NAME}-manual-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
+    expire_in: 3 days
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH
