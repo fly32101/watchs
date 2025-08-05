@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,6 +17,8 @@ type CommandExecutorImpl struct {
 	mu          sync.Mutex
 	lastRunTime time.Time
 	debounceMs  int
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // NewCommandExecutor 创建一个新的命令执行器
@@ -24,8 +27,12 @@ func NewCommandExecutor(debounceMs int) *CommandExecutorImpl {
 		debounceMs = 500 // 默认防抖时间为500毫秒
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &CommandExecutorImpl{
 		debounceMs: debounceMs,
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 }
 
@@ -46,12 +53,12 @@ func (e *CommandExecutorImpl) Execute(command string, workDir string) error {
 
 	ui.PrintInfo(fmt.Sprintf("执行命令: %s", command))
 
-	// 根据操作系统选择不同的命令执行方式
+	// 根据操作系统选择不同的命令执行方式，使用context进行管理
 	var cmd *exec.Cmd
 	if os.PathSeparator == '\\' { // Windows
-		cmd = exec.Command("cmd", "/c", command)
+		cmd = exec.CommandContext(e.ctx, "cmd", "/c", command)
 	} else { // Unix
-		cmd = exec.Command("/bin/sh", "-c", command)
+		cmd = exec.CommandContext(e.ctx, "/bin/sh", "-c", command)
 	}
 
 	cmd.Stdout = os.Stdout
@@ -76,14 +83,36 @@ func (e *CommandExecutorImpl) terminateUnsafe() error {
 		return nil
 	}
 
+	var err error
+
 	// 在 Windows 上使用 taskkill 来终止进程树
 	if os.PathSeparator == '\\' { // Windows
-		exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", e.cmd.Process.Pid)).Run()
+		killCmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", e.cmd.Process.Pid))
+		killCmd.Run() // 忽略taskkill的错误，因为进程可能已经结束
 	} else { // Unix
-		e.cmd.Process.Kill()
+		err = e.cmd.Process.Kill()
 	}
 
-	e.cmd.Wait() // 等待进程结束
+	// 等待进程结束，避免僵尸进程
+	waitErr := e.cmd.Wait()
+	if err == nil {
+		err = waitErr
+	}
+
 	e.cmd = nil
-	return nil
+	return err
+}
+
+// Close 清理资源
+func (e *CommandExecutorImpl) Close() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	// 取消context，这会终止所有使用该context的命令
+	if e.cancel != nil {
+		e.cancel()
+	}
+
+	// 终止当前命令
+	return e.terminateUnsafe()
 }

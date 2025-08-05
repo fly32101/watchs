@@ -78,5 +78,14 @@ func (s *WatchService) Stop() error {
 	}
 
 	// 停止监控服务
-	return s.watcherService.Stop()
+	err := s.watcherService.Stop()
+
+	// 清理命令执行器资源（如果实现了Close方法）
+	if closer, ok := s.commandExecutor.(interface{ Close() error }); ok {
+		if closeErr := closer.Close(); closeErr != nil {
+			ui.PrintWarning(fmt.Sprintf("清理命令执行器失败: %v", closeErr))
+		}
+	}
+
+	return err
 }

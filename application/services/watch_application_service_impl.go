@@ -11,6 +11,7 @@ import (
 	"github.com/watchs/application/interfaces"
 	"github.com/watchs/domain/entity"
 	"github.com/watchs/infrastructure/ui"
+	"github.com/watchs/infrastructure/utils"
 	"github.com/watchs/infrastructure/watcher"
 )
 
@@ -74,12 +75,23 @@ func (s *WatchApplicationServiceImpl) StartWatch(params *interfaces.WatchConfig)
 
 	s.isRunning = true
 	ui.PrintSuccess(fmt.Sprintf("监控已启动，正在监控目录: %s", config.WatchDir))
+
+	// 显示启动时的内存信息
+	startStats := utils.GetMemoryStats()
+	utils.PrintMemoryStats(startStats)
+
 	ui.PrintInfo("按 Ctrl+C 停止监控...")
 
 	// 等待中断信号
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	// 等待信号
 	<-sigCh
+
+	// 清理信号处理器，防止内存泄漏
+	signal.Stop(sigCh)
+	close(sigCh)
 
 	return s.StopWatch()
 }
@@ -97,6 +109,11 @@ func (s *WatchApplicationServiceImpl) StopWatch() error {
 	}
 
 	s.isRunning = false
+
+	// 显示关闭时的内存信息
+	endStats := utils.GetMemoryStats()
+	utils.PrintMemoryStats(endStats)
+
 	ui.PrintSuccess("监控已成功关闭!")
 	return nil
 }

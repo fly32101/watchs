@@ -19,6 +19,8 @@ type FSNotifyWatcher struct {
 	eventHandlers []func(event *entity.FileEvent) error
 	mu            sync.RWMutex
 	isRunning     bool
+	stopCh        chan struct{}
+	doneCh        chan struct{}
 }
 
 // NewFSNotifyWatcher 创建一个新的fsnotify文件监控器
@@ -32,6 +34,8 @@ func NewFSNotifyWatcher(config *entity.WatchConfig) (*FSNotifyWatcher, error) {
 		config:    config,
 		watcher:   watcher,
 		isRunning: false,
+		stopCh:    make(chan struct{}),
+		doneCh:    make(chan struct{}),
 	}, nil
 }
 
@@ -76,7 +80,17 @@ func (w *FSNotifyWatcher) Stop() error {
 	}
 
 	w.isRunning = false
-	return w.watcher.Close()
+
+	// 发送停止信号
+	close(w.stopCh)
+
+	// 关闭watcher，这会导致channels关闭
+	err := w.watcher.Close()
+
+	// 等待goroutine退出
+	<-w.doneCh
+
+	return err
 }
 
 // OnFileEvent 注册文件事件处理函数
@@ -120,8 +134,14 @@ func (w *FSNotifyWatcher) addWatchDir(dir string) error {
 
 // 监听文件变化事件
 func (w *FSNotifyWatcher) watchEvents() {
+	defer close(w.doneCh) // 确保在退出时关闭doneCh
+
 	for {
 		select {
+		case <-w.stopCh:
+			// 收到停止信号，退出goroutine
+			return
+
 		case event, ok := <-w.watcher.Events:
 			if !ok {
 				return

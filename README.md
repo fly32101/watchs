@@ -195,6 +195,13 @@ watchs watch -dir ./ -types .go,.json -exclude vendor,node_modules,.git -cmd "go
 * `-cmd`: 文件变化时执行的命令（默认为 `echo 文件已更新`）
 * `-force`: 是否强制覆盖已存在的配置文件
 
+### 内存监控命令参数 (memory)
+
+* `--detailed`: 显示详细的内存信息
+* `--monitor`: 启动内存监控模式
+* `--interval`: 监控间隔（秒），默认为5秒
+* `--gc`: 执行垃圾回收后显示内存信息
+
 ## 示例
 
 ### 查看帮助
@@ -220,6 +227,25 @@ watchs interactive
 ```bash
 # 生成默认配置文件
 watchs init
+```
+
+### 内存监控
+
+```bash
+# 显示当前内存使用情况
+watchs memory
+
+# 显示详细内存信息
+watchs memory --detailed
+
+# 执行垃圾回收后显示内存信息
+watchs memory --gc --detailed
+
+# 启动内存监控模式（每5秒更新一次）
+watchs memory --monitor
+
+# 自定义监控间隔（每10秒更新一次）
+watchs memory --monitor --interval 10
 
 # 生成自定义配置文件
 watchs init -config frontend.json -dir ./frontend -types .js,.jsx,.ts,.tsx,.css -exclude node_modules -cmd "npm run build"

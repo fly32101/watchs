@@ -88,16 +88,39 @@ func PrintEvent(event *entity.FileEvent) {
 	fmt.Fprintf(os.Stderr, "%s%s%s %s %s%s%s\n", color, emoji, Reset, event.Path, Gray, fmt.Sprint(event.Type), Reset)
 }
 
+// 预定义的进度条字符，避免重复分配
+var (
+	progressBarFilled = "████████████████████"
+	progressBarEmpty  = "                    "
+)
+
 // PrintProgressBar 显示进度条
 func PrintProgressBar(current, total int, label string) {
 	const barLength = 20
-	progress := current * barLength / total
-	percentage := current * 100 / total
 
-	fmt.Fprintf(os.Stderr, "\r%s [%s%s] %d%% %s",
+	// 防止除零错误
+	if total <= 0 {
+		return
+	}
+
+	progress := current * barLength / total
+	if progress > barLength {
+		progress = barLength
+	}
+
+	percentage := current * 100 / total
+	if percentage > 100 {
+		percentage = 100
+	}
+
+	// 使用预定义字符串的切片，避免重复分配
+	filled := progressBarFilled[:progress]
+	empty := progressBarEmpty[progress:]
+
+	fmt.Fprintf(os.Stderr, "\r%s [%s%s%s%s%s] %d%% %s",
 		WatchEmoji,
-		Green+string([]rune("████████████████████")[:progress])+Reset,
-		Gray+string([]rune("                    ")[progress:])+Reset,
+		Green, filled, Reset,
+		Gray, empty, Reset,
 		percentage,
 		label)
 

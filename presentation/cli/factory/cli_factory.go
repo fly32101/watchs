@@ -30,6 +30,7 @@ func (f *CLIFactory) CreateCLI() *cli.CLI {
 	registry.Register(cli.NewInitCommand(f.container.GetConfigApplicationService()))
 	registry.Register(cli.NewInteractiveCommand(f.container.GetConfigApplicationService(), f.container.GetWatchApplicationService()))
 	registry.Register(cli.NewVersionCommand())
+	registry.Register(cli.NewMemoryCommand())
 
 	// 注册帮助命令（需要在其他命令注册后）
 	registry.Register(cli.NewHelpCommand(registry))
