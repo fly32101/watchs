@@ -3,8 +3,6 @@ package cli
 import (
 	"log"
 	"os"
-
-	"github.com/watchs/infrastructure/persistence"
 )
 
 // CLI 表示命令行界面
@@ -12,29 +10,11 @@ type CLI struct {
 	registry *CommandRegistry
 }
 
-// NewCLI 创建一个新的命令行界面
-func NewCLI() *CLI {
-	// 创建配置仓储
-	configRepo := persistence.NewJsonConfigRepository()
-
-	// 创建命令注册表
-	registry := NewCommandRegistry(configRepo)
-
-	// 创建CLI
-	cli := &CLI{
+// NewCLIWithRegistry 使用指定的命令注册表创建CLI
+func NewCLIWithRegistry(registry *CommandRegistry) *CLI {
+	return &CLI{
 		registry: registry,
 	}
-
-	// 注册命令
-	registry.Register(NewWatchCommand(configRepo))
-	registry.Register(NewInitCommand(configRepo))
-	registry.Register(NewInteractiveCommand(configRepo))
-	registry.Register(NewVersionCommand())
-
-	// 注册帮助命令（需要在其他命令注册后）
-	registry.Register(NewHelpCommand(registry))
-
-	return cli
 }
 
 // Run 运行命令行界面

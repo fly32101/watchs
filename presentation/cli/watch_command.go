@@ -3,28 +3,19 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	"github.com/watchs/application"
-	"github.com/watchs/domain/entity"
-	"github.com/watchs/domain/repository"
-	"github.com/watchs/infrastructure/watcher"
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/application/interfaces"
 )
 
 // WatchCommand 监控命令
 type WatchCommand struct {
-	configRepo repository.ConfigRepository
+	watchService interfaces.WatchApplicationService
 }
 
 // NewWatchCommand 创建监控命令
-func NewWatchCommand(configRepo repository.ConfigRepository) *WatchCommand {
+func NewWatchCommand(watchService interfaces.WatchApplicationService) *WatchCommand {
 	return &WatchCommand{
-		configRepo: configRepo,
+		watchService: watchService,
 	}
 }
 
@@ -64,71 +55,18 @@ func (c *WatchCommand) Execute(args []string) error {
 		return nil
 	}
 
-	// 加载或创建配置
-	config, err := c.loadOrCreateConfig(*configPath, *watchDir, *fileTypes, *excludePaths, *command)
-	if err != nil {
-		ui.PrintError(fmt.Sprintf("配置加载失败: %v", err))
-		return fmt.Errorf("配置加载失败: %v", err)
+	// 创建监控配置参数
+	watchConfig := &interfaces.WatchConfig{
+		ConfigPath:   *configPath,
+		WatchDir:     *watchDir,
+		FileTypes:    *fileTypes,
+		ExcludePaths: *excludePaths,
+		Command:      *command,
+		DebounceMs:   *debounceMs,
 	}
 
-	ui.PrintInfo("正在初始化监控服务...")
-
-	// 模拟加载动画
-	ui.SimulateLoading(2*time.Second, "初始化监控器")
-
-	// 创建文件监控服务
-	fsWatcher, err := watcher.NewFSNotifyWatcher(config)
-	if err != nil {
-		ui.PrintError(fmt.Sprintf("创建文件监控器失败: %v", err))
-		return fmt.Errorf("创建文件监控器失败: %v", err)
-	}
-
-	// 创建命令执行器
-	cmdExecutor := watcher.NewCommandExecutor(*debounceMs)
-
-	// 创建应用服务
-	watchService := application.NewWatchService(config, fsWatcher, cmdExecutor)
-
-	// 启动监控
-	if err := watchService.Start(); err != nil {
-		ui.PrintError(fmt.Sprintf("启动监控失败: %v", err))
-		return fmt.Errorf("启动监控失败: %v", err)
-	}
-
-	ui.PrintSuccess(fmt.Sprintf("监控已启动，正在监控目录: %s", config.WatchDir))
-	ui.PrintInfo("按 Ctrl+C 停止监控...")
-
-	// 等待中断信号
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	<-sigCh
-
-	ui.PrintWarning("正在关闭监控...")
-	if err := watchService.Stop(); err != nil {
-		ui.PrintError(fmt.Sprintf("关闭监控失败: %v", err))
-	}
-
-	ui.PrintSuccess("监控已成功关闭!")
-	return nil
+	// 启动监控服务
+	return c.watchService.StartWatch(watchConfig)
 }
 
-// loadOrCreateConfig 加载或创建配置
-func (c *WatchCommand) loadOrCreateConfig(configPath, watchDir, fileTypes, excludePaths, command string) (*entity.WatchConfig, error) {
-	// 尝试加载配置
-	config, err := c.configRepo.LoadConfig(configPath)
-	if err != nil {
-		// 如果配置文件不存在，尝试使用命令行参数
-		if os.IsNotExist(err) && watchDir != "" && command != "" {
-			log.Printf("配置文件 %s 不存在，使用命令行参数", configPath)
-			return createConfigFromArgs(watchDir, fileTypes, excludePaths, command)
-		}
-		return nil, err
-	}
 
-	// 命令行参数覆盖配置文件
-	if watchDir != "" || fileTypes != "" || excludePaths != "" || command != "" {
-		return overrideConfig(config, watchDir, fileTypes, excludePaths, command)
-	}
-
-	return config, nil
-}

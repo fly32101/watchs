@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/watchs/presentation/cli"
+	"github.com/watchs/presentation/cli/factory"
 )
 
 // 版本信息，将由GoReleaser在构建时注入
@@ -22,7 +23,8 @@ func main() {
 	cli.Commit = commit
 	cli.Date = date
 
-	// 创建并运行CLI
-	cli := cli.NewCLI()
-	cli.Run()
+	// 使用工厂创建CLI
+	cliFactory := factory.NewCLIFactory()
+	cliInstance := cliFactory.CreateCLI()
+	cliInstance.Run()
 }

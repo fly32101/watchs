@@ -117,8 +117,8 @@ func (cli *InteractiveCLI) askString(question, defaultValue string) string {
 	return input
 }
 
-// askYesNo 询问是/否问题
-func (cli *InteractiveCLI) askYesNo(question string, defaultYes bool) bool {
+// AskYesNo 询问是/否问题
+func (cli *InteractiveCLI) AskYesNo(question string, defaultYes bool) bool {
 	defaultValue := "Y/n"
 	if !defaultYes {
 		defaultValue = "y/N"
