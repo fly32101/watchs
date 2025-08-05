@@ -67,8 +67,9 @@ GitHub Actions will automatically build binaries and create a Release.
 ### Install from GitHub Releases
 
 Visit the [GitHub Releases page](https://github.com/fly32101/watchs/releases) and download the binary suitable for your system:
-- Linux: `watchs-linux-amd64`
-- Windows: `watchs-windows-amd64.exe`
+- Linux: `watchs_Linux_x86_64.tar.gz` (Intel/AMD) or `watchs_Linux_arm64.tar.gz` (ARM)
+- Windows: `watchs_Windows_x86_64.zip`
+- macOS: `watchs_Darwin_x86_64.tar.gz` (Intel) or `watchs_Darwin_arm64.tar.gz` (Apple Silicon)
 
 ### Install from Source
 

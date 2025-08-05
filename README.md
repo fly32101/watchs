@@ -75,8 +75,9 @@ GitHub Actions将自动使用GoReleaser构建多平台二进制文件并创建Re
 ### 从GitHub Releases安装
 
 访问[GitHub Releases页面](https://github.com/fly32101/watchs/releases)，下载适合你系统的二进制文件：
-- Linux: `watchs-linux-amd64`
-- Windows: `watchs-windows-amd64.exe`
+- Linux: `watchs_Linux_x86_64.tar.gz` (Intel/AMD) 或 `watchs_Linux_arm64.tar.gz` (ARM)
+- Windows: `watchs_Windows_x86_64.zip`
+- macOS: `watchs_Darwin_x86_64.tar.gz` (Intel) 或 `watchs_Darwin_arm64.tar.gz` (Apple Silicon)
 
 ### 从源码安装
 
