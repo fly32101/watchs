@@ -58,14 +58,33 @@ func (c *InteractiveCommand) Execute(args []string) error {
 	interactiveCLI := NewInteractiveCLI()
 	startNow := interactiveCLI.AskYesNo("是否立即启动监控？[Y/n]: ", true)
 	if startNow {
+		// 询问是否启用内存监控
+		enableMemory := interactiveCLI.AskYesNo("是否启用内存监控？[y/N]: ", false)
+		memoryInterval := 30
+		if enableMemory {
+			fmt.Print("内存监控间隔（秒，默认30）: ")
+			var input string
+			fmt.Scanln(&input)
+			if input != "" {
+				if interval, err := fmt.Sscanf(input, "%d", &memoryInterval); err == nil && interval == 1 {
+					// 使用用户输入的间隔
+				} else {
+					ui.PrintWarning("无效的间隔时间，使用默认值30秒")
+					memoryInterval = 30
+				}
+			}
+		}
+
 		// 创建监控配置参数
 		watchConfig := &interfaces.WatchConfig{
-			ConfigPath:   configPath,
-			WatchDir:     "",
-			FileTypes:    "",
-			ExcludePaths: "",
-			Command:      "",
-			DebounceMs:   500,
+			ConfigPath:     configPath,
+			WatchDir:       "",
+			FileTypes:      "",
+			ExcludePaths:   "",
+			Command:        "",
+			DebounceMs:     500,
+			ShowMemory:     enableMemory,
+			MemoryInterval: memoryInterval,
 		}
 
 		// 启动监控服务

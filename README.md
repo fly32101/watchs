@@ -173,6 +173,12 @@ watchs -dir ./ -types .go,.json -exclude vendor,node_modules,.git -cmd "go run m
 
 ```bash
 watchs watch -dir ./ -types .go,.json -exclude vendor,node_modules,.git -cmd "go run main.go"
+
+# 启用内存监控
+watchs watch -memory
+
+# 自定义内存监控间隔（每60秒显示一次）
+watchs watch -memory -memory-interval 60
 ```
 
 ## 命令行参数
@@ -185,6 +191,8 @@ watchs watch -dir ./ -types .go,.json -exclude vendor,node_modules,.git -cmd "go
 * `-exclude`: 要排除的路径，以逗号分隔（覆盖配置文件）
 * `-cmd`: 文件变化时执行的命令（覆盖配置文件）
 * `-debounce`: 防抖时间，单位毫秒（默认为500）
+* `-memory`: 启用内存监控，定期显示内存使用情况
+* `-memory-interval`: 内存监控显示间隔，单位秒（默认为30）
 
 ### 初始化命令参数 (init)
 

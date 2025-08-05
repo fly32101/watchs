@@ -39,6 +39,8 @@ func (c *WatchCommand) Execute(args []string) error {
 	excludePaths := watchCmd.String("exclude", "", "要排除的路径，以逗号分隔 (覆盖配置文件)")
 	command := watchCmd.String("cmd", "", "文件变化时执行的命令 (覆盖配置文件)")
 	debounceMs := watchCmd.Int("debounce", 500, "防抖时间（毫秒）")
+	showMemory := watchCmd.Bool("memory", false, "显示内存使用信息")
+	memoryInterval := watchCmd.Int("memory-interval", 30, "内存信息显示间隔（秒）")
 	help := watchCmd.Bool("help", false, "显示帮助信息")
 
 	// 解析参数
@@ -52,21 +54,25 @@ func (c *WatchCommand) Execute(args []string) error {
 		fmt.Println("\n用法: watchs watch [选项]")
 		fmt.Println("\n选项:")
 		watchCmd.PrintDefaults()
+		fmt.Println("\n示例:")
+		fmt.Println("  watchs watch                           # 使用默认配置监控")
+		fmt.Println("  watchs watch --memory                  # 监控时显示内存信息")
+		fmt.Println("  watchs watch --memory --memory-interval 60  # 每60秒显示内存信息")
 		return nil
 	}
 
 	// 创建监控配置参数
 	watchConfig := &interfaces.WatchConfig{
-		ConfigPath:   *configPath,
-		WatchDir:     *watchDir,
-		FileTypes:    *fileTypes,
-		ExcludePaths: *excludePaths,
-		Command:      *command,
-		DebounceMs:   *debounceMs,
+		ConfigPath:     *configPath,
+		WatchDir:       *watchDir,
+		FileTypes:      *fileTypes,
+		ExcludePaths:   *excludePaths,
+		Command:        *command,
+		DebounceMs:     *debounceMs,
+		ShowMemory:     *showMemory,
+		MemoryInterval: *memoryInterval,
 	}
 
 	// 启动监控服务
 	return c.watchService.StartWatch(watchConfig)
 }
-
-

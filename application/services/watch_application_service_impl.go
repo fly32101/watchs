@@ -20,6 +20,7 @@ type WatchApplicationServiceImpl struct {
 	configService interfaces.ConfigApplicationService
 	watchService  *application.WatchService
 	isRunning     bool
+	memoryStopCh  chan struct{}
 }
 
 // NewWatchApplicationService 创建监控应用服务
@@ -80,6 +81,17 @@ func (s *WatchApplicationServiceImpl) StartWatch(params *interfaces.WatchConfig)
 	startStats := utils.GetMemoryStats()
 	utils.PrintMemoryStats(startStats)
 
+	// 启动内存监控（如果启用）
+	if params.ShowMemory {
+		ui.PrintInfo(fmt.Sprintf("内存监控已启用，每%d秒显示一次", params.MemoryInterval))
+		s.memoryStopCh = utils.StartMemoryMonitor(
+			time.Duration(params.MemoryInterval)*time.Second,
+			func(stats utils.MemoryStats) {
+				utils.PrintMemoryStats(stats)
+			},
+		)
+	}
+
 	ui.PrintInfo("按 Ctrl+C 停止监控...")
 
 	// 等待中断信号
@@ -103,6 +115,13 @@ func (s *WatchApplicationServiceImpl) StopWatch() error {
 	}
 
 	ui.PrintWarning("正在关闭监控...")
+
+	// 停止内存监控（如果启用）
+	if s.memoryStopCh != nil {
+		close(s.memoryStopCh)
+		s.memoryStopCh = nil
+	}
+
 	if err := s.watchService.Stop(); err != nil {
 		ui.PrintError(fmt.Sprintf("关闭监控失败: %v", err))
 		return err

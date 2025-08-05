@@ -16,10 +16,12 @@ type WatchApplicationService interface {
 
 // WatchConfig 监控配置参数
 type WatchConfig struct {
-	ConfigPath   string
-	WatchDir     string
-	FileTypes    string
-	ExcludePaths string
-	Command      string
-	DebounceMs   int
+	ConfigPath     string
+	WatchDir       string
+	FileTypes      string
+	ExcludePaths   string
+	Command        string
+	DebounceMs     int
+	ShowMemory     bool
+	MemoryInterval int
 }
