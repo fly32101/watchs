@@ -48,8 +48,9 @@
 
 项目使用GitHub Actions进行自动化构建和发布：
 
-* **持续集成（CI）**：在每次代码推送和PR时，自动在Linux和Windows上使用Go 1.21进行测试和构建
-* **自动发布**：在创建新的标签（如v1.0.0）时，自动构建二进制文件并创建GitHub Release
+* **持续集成（CI）**：在每次代码推送和PR时，自动运行测试和构建检查
+* **自动发布**：仅在创建新的标签（如v1.0.0）时，自动构建多平台二进制文件并创建GitHub Release
+* **手动构建**：可通过GitHub Actions手动触发构建，用于开发测试
 
 ### 发布新版本
 
@@ -60,7 +61,14 @@ git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 ```
 
-GitHub Actions将自动构建二进制文件并创建Release。
+GitHub Actions将自动使用GoReleaser构建多平台二进制文件并创建Release。
+
+### 手动构建
+
+如需手动构建开发版本，可以：
+1. 访问GitHub仓库的Actions页面
+2. 选择"Build"工作流
+3. 点击"Run workflow"手动触发构建
 
 ## 安装
 

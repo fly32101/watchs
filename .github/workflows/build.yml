@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      build_platforms:
+        description: 'Build platforms (comma-separated: linux,windows,darwin)'
+        required: false
+        default: 'linux,windows'
+        type: string
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build for Linux
+        if: contains(github.event.inputs.build_platforms, 'linux')
+        run: |
+          GOOS=linux GOARCH=amd64 go build -v -o watchs-linux-amd64 ./cmd/watchs
+
+      - name: Build for Windows
+        if: contains(github.event.inputs.build_platforms, 'windows')
+        run: |
+          GOOS=windows GOARCH=amd64 go build -v -o watchs-windows-amd64.exe ./cmd/watchs
+
+      - name: Build for macOS
+        if: contains(github.event.inputs.build_platforms, 'darwin')
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -v -o watchs-darwin-amd64 ./cmd/watchs
+
+      - name: Upload Linux artifact
+        if: contains(github.event.inputs.build_platforms, 'linux')
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchs-linux-amd64
+          path: watchs-linux-amd64
+          retention-days: 7
+
+      - name: Upload Windows artifact
+        if: contains(github.event.inputs.build_platforms, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchs-windows-amd64
+          path: watchs-windows-amd64.exe
+          retention-days: 7
+
+      - name: Upload macOS artifact
+        if: contains(github.event.inputs.build_platforms, 'darwin')
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchs-darwin-amd64
+          path: watchs-darwin-amd64
+          retention-days: 7
