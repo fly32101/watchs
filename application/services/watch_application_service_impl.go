@@ -10,15 +10,15 @@ import (
 	"github.com/watchs/application"
 	"github.com/watchs/application/interfaces"
 	"github.com/watchs/domain/entity"
+	"github.com/watchs/infrastructure/ui"
 	"github.com/watchs/infrastructure/watcher"
-	"github.com/watchs/presentation/cli/ui"
 )
 
 // WatchApplicationServiceImpl 监控应用服务实现
 type WatchApplicationServiceImpl struct {
-	configService   interfaces.ConfigApplicationService
-	watchService    *application.WatchService
-	isRunning       bool
+	configService interfaces.ConfigApplicationService
+	watchService  *application.WatchService
+	isRunning     bool
 }
 
 // NewWatchApplicationService 创建监控应用服务

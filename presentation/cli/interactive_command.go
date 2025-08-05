@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/watchs/application/interfaces"
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // InteractiveCommand 交互式命令

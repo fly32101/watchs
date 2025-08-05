@@ -9,8 +9,8 @@ import (
 	"github.com/watchs/application/interfaces"
 	"github.com/watchs/domain/entity"
 	"github.com/watchs/domain/repository"
+	"github.com/watchs/infrastructure/ui"
 	"github.com/watchs/presentation/cli"
-	"github.com/watchs/presentation/cli/ui"
 )
 
 // ConfigApplicationServiceImpl 配置应用服务实现

@@ -6,7 +6,7 @@ import (
 
 	"github.com/watchs/domain/entity"
 	"github.com/watchs/domain/service"
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // WatchService 是应用层的文件监控服务

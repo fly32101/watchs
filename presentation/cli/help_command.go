@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // HelpCommand 帮助命令

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/watchs/application/interfaces"
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // InitCommand 初始化命令

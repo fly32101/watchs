@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/watchs/domain/entity"
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // InteractiveCLI 交互式命令行界面

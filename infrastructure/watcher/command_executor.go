@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/watchs/presentation/cli/ui"
+	"github.com/watchs/infrastructure/ui"
 )
 
 // CommandExecutorImpl 是命令执行器的实现
