@@ -1,5 +1,5 @@
 # Watchs - 文件变更监控工具
-
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/fly32101/watchs?utm_source=oss&utm_medium=github&utm_campaign=fly32101%2Fwatchs&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 一个基于DDD（领域驱动设计）架构的文件变更监控工具，可以监控指定目录下的文件变化，并在文件变化时执行指定命令。
 
 ## 功能特点
